@@ -113,7 +113,8 @@ const MultiSelect: React.FC<FormFieldInputProps> = ({ field, value, errors, warn
                 return (
                   <Checkbox
                     className={styles.checkbox}
-                    checked={initiallyCheckedQuestionItems.some((item) => item === answer.concept)}
+                    checked={value?.includes(answer.concept)}
+
                     disabled={answer.disable?.isDisabled}
                     id={checkboxId} // unique per option
                     key={`${checkboxId}-${index}`}

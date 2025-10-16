@@ -101,5 +101,8 @@
     "*.{ts,tsx}": "eslint --cache --fix --max-warnings 0",
     "*.{css,scss,ts,tsx}": "prettier --write --list-different"
   },
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.9.1",
+  "resolutions": {
+    "@openmrs/esm-form-engine-app": "portal:/home/santosh/chart-app/openmrs-esm-updated-patient-chart_001/openmrs-esm-patient-chart/packages/esm-form-engine-app"
+  }
 }

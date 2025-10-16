@@ -103,7 +103,7 @@ describe('CommonExpressionHelpers', () => {
       expect(helpers.isDateAfter(selectedDate, baseDate, duration, timePeriod)).toBe(false);
     });
   });
-
+  
   describe('useFieldValue', () => {
     it('should return the field value if the key exists', () => {
       helpers.allFieldValues = { question1: 'value1' };

@@ -88,6 +88,35 @@ function evaluateFieldDependents(field: FormField, values: any, context: FormCon
             reportError(error, 'Error evaluating calculate expression');
           });
       }
+
+      // if (field.fieldDependents) {
+      //   // First, hide and clear values of all dependents before re-evaluation
+      //   field.fieldDependents.forEach((depId) => {
+      //     const dependent = formFields.find((f) => f.id == depId);
+      //     if (dependent) {
+      //       // Hide dependent and clear its value
+      //       dependent.isHidden = true;
+      //       dependent.meta.submission = {};
+      //       dependent.value = null;
+      //       context.methods.setValue(dependent.id, null);
+      //       updateFormField(dependent);
+      //     }
+      //   });
+      // }f
+      if (dependent.isHidden) {
+        const currentValue = context.methods.getValues()[dependent.id];
+      
+        // Handle checkbox and other array-type fields
+        if (Array.isArray(currentValue)) {
+          context.methods.setValue(dependent.id, []);
+        } else {
+          context.methods.setValue(dependent.id, null);
+        }
+      
+        // Clear validation state
+        dependent.meta.submission = {};
+      }
+
       // evaluate hide
       if (dependent.hide) {
         const targetSection = findFieldSection(formJson, dependent);
@@ -200,6 +229,24 @@ function evaluateFieldDependents(field: FormField, values: any, context: FormCon
           },
         );
       }
+      const currentValue = values[dependent.id];
+
+      if (!isEmpty(currentValue)) {
+        if (Array.isArray(currentValue)) {
+          setValue(dependent.id, []);
+          console.log(`Cleared ${dependent.id} to []`);
+        } else {
+          setValue(dependent.id, null);
+          console.log(`Cleared ${dependent.id} to null`);
+        }
+      
+        if (!dependent.meta.submission) {
+          dependent.meta.submission = {};
+        }
+      
+        dependent.meta.submission.newValue = null;
+      }
+      
       // evaluate repeat limit
       if (hasRendering(dependent, 'repeating') && !isEmpty(dependent.questionOptions.repeatOptions?.limitExpression)) {
         dependent.questionOptions.repeatOptions.limit = evaluateExpression(

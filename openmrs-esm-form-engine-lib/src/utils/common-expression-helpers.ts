@@ -157,7 +157,6 @@ export class CommonExpressionHelpers {
     console.log(`Field "${questionId}" is filled or not required`);
     return false;
   };
-  
 
   
 
@@ -194,7 +193,6 @@ export class CommonExpressionHelpers {
   addDaysToDate = (date: Date, days: number): Date => {
     return dayjs(date).add(days, 'day').toDate();
   };
-
   useFieldValue = (questionId: string) => {
     const targetField = this.allFields.find((field) => field.id === questionId);
     if (targetField) {
