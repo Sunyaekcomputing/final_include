@@ -111,11 +111,35 @@ export class EncounterFormProcessor extends FormProcessor {
 
   async processSubmission(context: FormContextProps, abortController: AbortController) {
     const { encounterRole, encounterProvider, encounterDate, encounterLocation } = getMutableSessionProps(context);
+   const safeEncounterDate =
+  encounterDate instanceof Date
+    ? encounterDate
+    : new Date(encounterDate ?? Date.now());
+    
     const t = (key: string, defaultValue: string) =>
       translateFrom(formEngineAppName, key, defaultValue);
+
+    // Validate required encounter fields
+    const missingFields = [];
+   if (!safeEncounterDate) missingFields.push('Encounter date');
+    if (!encounterRole) missingFields.push('Encounter role');
+    if (!encounterProvider) missingFields.push('Encounter provider');
+    if (!encounterLocation) missingFields.push('Encounter location');
+
+    if (missingFields.length > 0) {
+      console.error('[DEBUG] Missing required encounter fields:', missingFields);
+      console.debug('[DEBUG] Session props - Date:', encounterDate, 'Role:', encounterRole, 'Provider:', encounterProvider, 'Location:', encounterLocation);
+      return Promise.reject({
+        title: t('missingRequiredFields', 'Missing required fields'),
+        description: missingFields.join(', '),
+        kind: 'error',
+        critical: true,
+      });
+    }
+    
   
     const patientIdentifiers = preparePatientIdentifiers(context.formFields, encounterLocation);
-    const encounter = prepareEncounter(context, encounterDate, encounterRole, encounterProvider, encounterLocation);
+    const encounter = prepareEncounter(context, safeEncounterDate, encounterRole, encounterProvider, encounterLocation);
   
     try {
       console.log('[DEBUG] Saving patient identifiers:', patientIdentifiers);
@@ -129,10 +153,11 @@ export class EncounterFormProcessor extends FormProcessor {
       }
     } catch (error: any) {
       const errorMessages = extractErrorMessagesFromResponse(error);
-      console.error('[DEBUG] Error saving patient identifiers:', errorMessages);
+      const errorDescription = errorMessages.filter(Boolean).join(', ') || error?.message || 'An error occurred while saving patient identifiers';
+      console.error('[DEBUG] Error saving patient identifiers:', errorDescription);
       return Promise.reject({
         title: t('errorSavingPatientIdentifiers', 'Error saving patient identifiers'),
-        description: errorMessages.join(', '),
+        description: errorDescription,
         kind: 'error',
         critical: true,
       });
@@ -151,10 +176,11 @@ export class EncounterFormProcessor extends FormProcessor {
       }
     } catch (error: any) {
       const errorMessages = extractErrorMessagesFromResponse(error);
-      console.error('[DEBUG] Error saving patient programs:', errorMessages);
+      const errorDescription = errorMessages.filter(Boolean).join(', ') || error?.message || 'An error occurred while saving patient programs';
+      console.error('[DEBUG] Error saving patient programs:', errorDescription);
       return Promise.reject({
         title: t('errorSavingPatientPrograms', 'Error saving patient program(s)'),
-        description: errorMessages.join(', '),
+        description: errorDescription,
         kind: 'error',
         critical: true,
       });
@@ -162,7 +188,9 @@ export class EncounterFormProcessor extends FormProcessor {
   
     try {
       console.log('[DEBUG] Saving encounter:', encounter);
-      const { data: savedEncounter } = await saveEncounter(abortController, encounter, encounter.uuid);
+      const controller = abortController ?? new AbortController();
+
+      const { data: savedEncounter } = await saveEncounter(controller, encounter, encounter.uuid);
       console.log('[DEBUG] Encounter saved successfully:', savedEncounter);
   
       const savedOrders = savedEncounter.orders.map((o) => o.orderNumber);
@@ -175,10 +203,11 @@ export class EncounterFormProcessor extends FormProcessor {
         console.log('[DEBUG] Attachments saved:', attachmentsResponse?.length);
       } catch (error) {
         const errorMessages = extractErrorMessagesFromResponse(error);
-        console.error('[DEBUG] Error saving attachments:', errorMessages);
+        const errorDescription = errorMessages.filter(Boolean).join(', ') || error?.message || 'An error occurred while saving attachments';
+        console.error('[DEBUG] Error saving attachments:', errorDescription);
         return Promise.reject({
           title: t('errorSavingAttachments', 'Error saving attachment(s)'),
-          description: errorMessages.join(', '),
+          description: errorDescription,
           kind: 'error',
           critical: true,
         });
@@ -187,13 +216,21 @@ export class EncounterFormProcessor extends FormProcessor {
       return savedEncounter;
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.warn('[DEBUG] Encounter save aborted:', error);
+        const reason = error.message || 'Form submission cancelled';
+        console.warn('[DEBUG] Encounter save aborted:', reason);
       } else {
         const errorMessages = extractErrorMessagesFromResponse(error);
-        console.error('[DEBUG] Error saving encounter:', errorMessages);
+        const errorDescription = errorMessages.filter(Boolean).join(', ') || error?.message || 'An error occurred while saving the encounter';
+        console.error('[DEBUG] Error saving encounter:', errorDescription);
+         const backendMessage =
+    error?.response?.data ||
+    error?.response ||
+    error?.message ||
+    error;
+    console.error('[DEBUG] Backend Encounter Save Response:', backendMessage);
         return Promise.reject({
           title: t('errorSavingEncounter', 'Error saving encounter'),
-          description: errorMessages.join(', '),
+          description: errorDescription,
           kind: 'error',
           critical: true,
         });

@@ -201,25 +201,28 @@ const FormEngine = ({
     }
   };
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-  
-      const { fields, fieldData } = getAllFieldData();
-      const missingRequired = fields.find((f) => f.isRequired && !f.isFilled);
-  
-      if (missingRequired) {
-        scrollToMissingRequiredField();
-        setIsSubmitting(false);
-        return;
-      }
-  
-      onSubmit?.(fieldData);
-      setIsSubmitting(true);
-    },
-    [onSubmit, refinedFormJson]
-  );
+ const handleSubmit = useCallback(
+  (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
+    const { fields } = getAllFieldData();
+    const missingRequired = fields.find((f) => f.isRequired && !f.isFilled);
+
+    if (missingRequired) {
+      scrollToMissingRequiredField();
+      return;
+    }
+
+    setIsSubmitting(true);   // ⭐ Move this UP
+
+    Promise.resolve(onSubmit?.(getAllFieldData().fieldData))
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+
+  },
+  [onSubmit, refinedFormJson]
+);
   const handleDiscardConfirm = () => {
     setShowDiscardModal(false);
     window.location.href = '/openmrs/spa/home';

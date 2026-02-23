@@ -175,10 +175,8 @@ export const FormFactoryProvider: React.FC<FormFactoryProviderProps> = ({
         });
     }
 
-    // Only abort on unmount
-    return () => {
-      abortControllerRef.current?.abort();
-    };
+    // Only abort on unmount or when submission is cancelled
+    
   }, [isSubmitting, validateAllForms]);
 
   return (

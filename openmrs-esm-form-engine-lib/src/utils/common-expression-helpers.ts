@@ -78,16 +78,16 @@ export class CommonExpressionHelpers {
       calcValue = 0;
     }
     if (answerObj.value === 1) {
-      calcValue = 0;
-    }
-    if (answerObj.value === 2) {
       calcValue = 1;
     }
-    if (answerObj.value === 3) {
+    if (answerObj.value === 2) {
       calcValue = 2;
     }
-    if (answerObj.value === 4) {
+    if (answerObj.value === 3) {
       calcValue = 3;
+    }
+    if (answerObj.value === 4) {
+      calcValue = 4;
     }
   
     console.log(`Numeric value for calculation for "${questionId}":`, calcValue);

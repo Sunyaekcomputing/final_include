@@ -53,34 +53,38 @@ export function prepareEncounter(
       ];
     }
     // TODO: Question: Should we be editing the location, form and visit here?
-    encounterForSubmission.encounterDatetime = encounterDate;
+    
+   encounterForSubmission.encounterDatetime = formatEncounterDatetime(encounterDate);
     encounterForSubmission.location = location;
     encounterForSubmission.form = {
       uuid: formJson.uuid,
     };
-    if (visit) {
-      encounterForSubmission.visit = visit.uuid;
-    }
+   encounterForSubmission.visit = visit?.uuid ?? null;
     encounterForSubmission.obs = obsForSubmission;
     encounterForSubmission.orders = ordersForSubmission;
     encounterForSubmission.diagnoses = diagnosesForSubmission;
   } else {
     encounterForSubmission = {
       patient: patient.id,
-      encounterDatetime: encounterDate,
+      encounterDatetime: formatEncounterDatetime(encounterDate),
       location: location,
       encounterType: formJson.encounterType,
-      encounterProviders: [
-        {
-          provider: encounterProvider,
-          encounterRole,
-        },
-      ],
+        encounterProviders: [
+  {
+    provider: {
+      uuid: encounterProvider,
+    },
+    encounterRole: {
+      uuid: encounterRole,
+    },
+  },
+],
+
       obs: obsForSubmission,
       form: {
         uuid: formJson.uuid,
       },
-      visit: visit?.uuid,
+     visit: visit?.uuid ?? null,
       orders: ordersForSubmission,
       diagnoses: diagnosesForSubmission,
     };
@@ -371,4 +375,7 @@ function prepareDiagnosis(fields: FormField[]) {
     .filter((o) => o);
 
   return diagnoses;
+}
+function formatEncounterDatetime(date: Date | string): string {
+  return new Date(date).toISOString().replace('Z', '+0000');
 }
